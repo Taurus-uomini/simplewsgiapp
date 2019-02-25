@@ -1,4 +1,7 @@
 import traceback
+import os
+from ConfigParser import ConfigParser
+from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
 from werkzeug.routing import Map, Rule
 from werkzeug.exceptions import HTTPException, NotFound, MethodNotAllowed
@@ -6,6 +9,8 @@ from werkzeug.local import LocalStack, LocalProxy
 
 
 class wsgiApp:
+    __config = None
+
     def __init__(self):
         self.__url_map = Map([
             Rule('/', endpoint='hello')
@@ -14,6 +19,35 @@ class wsgiApp:
         ])
         self.__view_functions = dict()
         self.__localstack = LocalStack()
+        self.__read_config()
+
+    def __read_config(self):
+        if self._wsgiApp__config is None:
+            configp = ConfigParser(allow_no_value=True)
+            dirlist = os.listdir(os.getcwd() + '\\config')
+            config_files = list()
+            for dirname in dirlist:
+                if dirname.endswith('.ini'):
+                    config_files.append(dirname)
+            self._wsgiApp__config = dict()
+            for config_file in config_files:
+                configp.read(os.getcwd() + '\\config\\' + config_file)
+                sections = configp.sections()
+                for section in sections:
+                    item = dict()
+                    for key, value in configp.items(section):
+                        item[key] = value
+                    self._wsgiApp__config[section] = item
+
+    def get_config(self):
+        if self._wsgiApp__config is None:
+            self.__read_config()
+        return self._wsgiApp__config
+
+    def run(self):
+        config = self.get_config()
+        print config
+        run_simple(hostname=config['BaseConfig']['hostname'], port=int(config['BaseConfig']['port']), application=self)
 
     def get_data(self, request):
         if request.method.lower() == 'post':

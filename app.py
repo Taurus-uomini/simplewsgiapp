@@ -1,5 +1,4 @@
 from src.wsgapp import wsgiApp
-from werkzeug.serving import run_simple
 
 app = wsgiApp()
 
@@ -18,4 +17,4 @@ def futest():
 
 
 if __name__ == '__main__':
-    run_simple('localhost', 5000, app)
+    app.run()
