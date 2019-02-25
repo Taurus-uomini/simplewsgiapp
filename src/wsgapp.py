@@ -47,7 +47,11 @@ class wsgiApp:
     def run(self):
         config = self.get_config()
         print config
-        run_simple(hostname=config['BaseConfig']['hostname'], port=int(config['BaseConfig']['port']), application=self)
+        run_simple(
+            hostname=config['BaseConfig']['hostname'],
+            port=int(config['BaseConfig']['port']),
+            application=self
+        )
 
     def get_data(self, request):
         if request.method.lower() == 'post':
