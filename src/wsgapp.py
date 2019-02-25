@@ -22,14 +22,14 @@ class wsgiApp:
         self.__read_config()
 
     def __read_config(self):
-        if self._wsgiApp__config is None:
+        if self.__config is None:
             configp = ConfigParser(allow_no_value=True)
             dirlist = os.listdir(os.getcwd() + '\\config')
             config_files = list()
             for dirname in dirlist:
                 if dirname.endswith('.ini'):
                     config_files.append(dirname)
-            self._wsgiApp__config = dict()
+            self.__config = dict()
             for config_file in config_files:
                 configp.read(os.getcwd() + '\\config\\' + config_file)
                 sections = configp.sections()
@@ -37,16 +37,15 @@ class wsgiApp:
                     item = dict()
                     for key, value in configp.items(section):
                         item[key] = value
-                    self._wsgiApp__config[section] = item
+                    self.__config[section] = item
 
     def get_config(self):
-        if self._wsgiApp__config is None:
+        if self.__config is None:
             self.__read_config()
-        return self._wsgiApp__config
+        return self.__config
 
     def run(self):
         config = self.get_config()
-        print config
         run_simple(
             hostname=config['BaseConfig']['hostname'],
             port=int(config['BaseConfig']['port']),
@@ -94,7 +93,12 @@ class wsgiApp:
             res = e.get_body()
         except Exception, e:
             status = 500
-            res = traceback.format_exc(request)
+            config = self.get_config()
+            if config['BaseConfig']['debug'] == 'true':
+                res = traceback.format_exc()
+            else:
+                print traceback.format_exc()
+                res = 'server error'
         finally:
             self.__localstack.pop()
             response = Response(res, status=status, mimetype='text/html')
