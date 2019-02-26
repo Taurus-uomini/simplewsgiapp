@@ -17,6 +17,7 @@ class wsgiApp:
             # Rule('/<short_id>', endpoint='follow_short_link'),
             # Rule('/<short_id>+', endpoint='short_link_details')
         ])
+        self.is_run = False
         self.__view_functions = dict()
         self.__localstack = LocalStack()
         self.__read_config()
@@ -45,12 +46,16 @@ class wsgiApp:
         return self.__config
 
     def run(self):
-        config = self.get_config()
-        run_simple(
-            hostname=config['BaseConfig']['hostname'],
-            port=int(config['BaseConfig']['port']),
-            application=self
-        )
+        if self.is_run is True:
+            print 'the app is already running'
+        else:
+            config = self.get_config()
+            run_simple(
+                hostname=config['BaseConfig']['hostname'],
+                port=int(config['BaseConfig']['port']),
+                application=self
+            )
+            self.is_run = True
 
     def get_data(self, request):
         if request.method.lower() == 'post':
