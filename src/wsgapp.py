@@ -1,5 +1,6 @@
 import traceback
 import os
+from src.util import loadLogging, writeLogging
 from ConfigParser import ConfigParser
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
@@ -17,6 +18,7 @@ class wsgiApp:
             # Rule('/<short_id>', endpoint='follow_short_link'),
             # Rule('/<short_id>+', endpoint='short_link_details')
         ])
+        self.logging = loadLogging()
         self.is_run = False
         self.__view_functions = dict()
         self.__localstack = LocalStack()
@@ -62,6 +64,7 @@ class wsgiApp:
             data = request.form.to_dict()
         else:
             data = request.args.to_dict()
+        writeLogging(self.logging, 'get request:' + str(data))
         return data
 
     def get_local_attr(self, attr):
@@ -99,10 +102,12 @@ class wsgiApp:
         except Exception, e:
             status = 500
             config = self.get_config()
+            error = traceback.format_exc()
+            writeLogging(self.logging, error)
             if config['BaseConfig']['debug'] == 'true':
-                res = traceback.format_exc()
+                res = error
             else:
-                print traceback.format_exc()
+                print error
                 res = 'server error'
         finally:
             self.__localstack.pop()
