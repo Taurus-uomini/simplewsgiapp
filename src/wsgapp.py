@@ -11,6 +11,7 @@ from werkzeug.local import LocalStack, LocalProxy
 
 class wsgiApp:
     __config = None
+    logger = None
 
     def __init__(self):
         self.__url_map = Map([
@@ -18,7 +19,7 @@ class wsgiApp:
             # Rule('/<short_id>', endpoint='follow_short_link'),
             # Rule('/<short_id>+', endpoint='short_link_details')
         ])
-        self.logging = loadLogging()
+        self.logger = loadLogging(self.logger)
         self.is_run = False
         self.__view_functions = dict()
         self.__localstack = LocalStack()
@@ -64,7 +65,7 @@ class wsgiApp:
             data = request.form.to_dict()
         else:
             data = request.args.to_dict()
-        writeLogging(self.logging, 'get request:' + str(data))
+        writeLogging(self.logger, 'get request:' + str(data))
         return data
 
     def get_local_attr(self, attr):
@@ -103,7 +104,7 @@ class wsgiApp:
             status = 500
             config = self.get_config()
             error = traceback.format_exc()
-            writeLogging(self.logging, error)
+            writeLogging(self.logger, error)
             if config['BaseConfig']['debug'] == 'true':
                 res = error
             else:
